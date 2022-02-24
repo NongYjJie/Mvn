@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+
+    <!-- 默认扫描包下面所有注解  use-default-filters="false" 不默认扫描所有
+        annotation 对应的类是注解本身
+        assignable 对应的类是我们自己写的类，上面加了注解
+         -->
+    <context:component-scan base-package="com.yr">
+        <!-- 这里配置排除指定类上指定注解，因为这两个都是Springmvc需要用的，所以要排除-->
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+        <context:exclude-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+    </context:component-scan>
+    <context:property-placeholder location="classpath:db.properties"/>
+
+    <!-- 配置数据源，链接池 -->
+    <!-- 配置C3P0数据源 -->
+ <!--   <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="user" value="${jdbc.user}"></property>
+        <property name="password" value="${jdbc.password}"></property>
+        <property name="jdbcUrl" value="${jdbc.jdbcUrl}"></property>
+        <property name="driverClass" value="${jdbc.driverClass}"></property>
+    </bean>-->
+    <!-- jndi数据源配置-->
+      <bean id="dataSource" class="org.springframework.jndi.JndiObjectFactoryBean">
+          <property name="jndiName">
+              <value>java:/comp/env/mysql</value>
+          </property>
+      </bean>
+
+
+    <!-- 配置SqlSessionFactoryBeanMybatis提供的: org.mybatis.spring.SqlSessionFactoryBeanMP提供的:com.baomidou.mybatisplus.spring.MybatisSqlSessionFactoryBean -->
+    <bean class="com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean" id="sqlSessionFactoryBean">
+        <!-- 指定数据源 -->
+        <property name="dataSource" ref="dataSource"></property>
+        <!-- 指定别名 -->
+        <property name="typeAliasesPackage" value="com.yr.entity"></property>
+
+        <!-- 插件注册 -->
+        <property name="plugins">
+            <list>
+                <!-- 注册分页插件 -->
+                <bean class="com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor"></bean>
+            </list>
+        </property>
+
+        <!-- <property value="classpath:mybatis-config.xml" name="configLocation"/>-->
+
+        <property name="globalConfig" ref="dbConfig"/>
+
+    </bean>
+
+    <!-- 定义MybatisPlus的全局策略配置-->
+    <bean id ="dbConfig" class="com.baomidou.mybatisplus.core.config.GlobalConfig">
+    </bean>
+    <!-- 定义MybatisPlus的全局策略配置-->
+    <bean id ="DbConfig" class="com.baomidou.mybatisplus.core.config.GlobalConfig.DbConfig">
+    </bean>
+
+
+    <!-- mybatis自动扫描加载Sql映射文件 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property value="com.yr.mapper" name="basePackage"></property>
+        <property value="sqlSessionFactoryBean" name="sqlSessionFactoryBeanName"></property>
+    </bean>
+
+</beans>
